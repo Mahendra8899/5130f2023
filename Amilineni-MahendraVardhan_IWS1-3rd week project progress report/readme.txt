@@ -10,7 +10,7 @@ I have hosted my page and db  in AWS server.
 Use these login details to login or signup and use that.
 
 Username: mahendra
-Password: Vardhan2233
+Password: vardhan2233
 
 Thanks and questions and quires :
 
