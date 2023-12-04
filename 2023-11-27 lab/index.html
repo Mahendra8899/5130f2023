@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Authentication</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: linear-gradient(45deg, #3498db, #e74c3c);
+      border-radius: 10px;
+      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
+      padding: 30px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    h1 {
+      margin: 0;
+      color: #fff;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 25px;
+      outline: none;
+      font-size: 16px;
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    button {
+      background: linear-gradient(45deg, #3498db, #e74c3c);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 12px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    button:hover {
+      background: linear-gradient(45deg, #2980b9, #c0392b);
+    }
+
+    .error {
+      color: red;
+      margin: 5px 0;
+    }
+
+    a {
+      text-decoration: none;
+      color: #3498db;
+      font-size: 14px;
+      margin-top: 10px;
+      transition: color 0.3s;
+    }
+
+    a:hover {
+      color: #2980b9;
+    }
+
+    #location {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    
+    #success-message {
+      background-color: #2ecc71;
+      color: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+      margin-top: 20px;
+    }
+
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+<script>navigator.serviceWorker.register("service-worker.js")</script> 
+<link rel="manifest" href="manifest.json" />  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>User Authentication</h1>
+
+    <!-- Sign Up Form -->
+    <form action="/signup" method="POST">
+      <input type="email" name="email" id="signup-email" placeholder="Email" required><br>
+      <input type="password" name="password" placeholder="Password" required><br>
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <h2>Sign In</h2>
+    <form action="/signin" method="POST">
+      <input type="email" name="email" id="signin-email" placeholder="Email" required><br>
+      <input type="password" name="password" placeholder="Password" required><br>
+      <input type="text" name="otp" placeholder="Enter OTP" required><br>
+      <button type="submit">Sign In</button>
+    </form>
+
+    <button id="sendOTP">Send OTP</button>
+
+    <a href="#">Forgot Password?</a>
+
+    <p id="location">Your current location: <span id="userLocation"></span></p>
+
+    <div id="weather" style="margin-top: 20px; color: #fff;">
+      <h2>Current Weather</h2>
+      <p>Temperature: <span id="weather-temp"></span>°C</p>
+      <p>Condition: <span id="weather-condition"></span></p>
+    </div>
+
+    <div id="language" style="margin-top: 10px; color: #fff;"></div>
+    <div id="currency" style="margin-top: 10px; color: #fff;"></div>
+
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/i18next@23.7.7/dist/umd/i18next.min.js  "></script>
+  <script>
+
+    const countryInfo = {
+          "US": { language: "English", currency: "USD" },
+          "FR": { language: "French", currency: "EUR" },
+          "JP": { language: "Japanese", currency: "JPY" },
+         
+        };
+
+    function displayLocationDetails(latitude, longitude) {
+      const apiKey = '6064fcb83d1442b7862d60b3354f23ab';
+      const url = `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}`;
+
+      $.get(url, function (data) {
+        if (data.results && data.results.length > 0) {
+          const countryCode = data.results[0].components.country_code.toUpperCase();
+          
+          // Lookup country info
+          const info = countryInfo[countryCode] || { language: 'Not available', currency: 'Not available' };
+
+          $('#language').text(`Local Language: ${info.language}`);
+          $('#currency').text(`Currency: ${info.currency}`);
+        }
+      }).fail(function () {
+        $('#language').text('Language info not available.');
+        $('#currency').text('Currency info not available.');
+      });
+    }
+
+    // Existing geolocation call
+    navigator.geolocation.getCurrentPosition(function (position) {
+      displayLocationDetails(position.coords.latitude, position.coords.longitude);
+    });
+
+    // Function to fetch and display weather
+    
+
+      // Get and display user's location
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          const userLocation = document.getElementById("userLocation");
+          userLocation.textContent = "Fetching location...";
+
+          // Use OpenCage Geocoding API to get location details
+          $.get(`https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=6064fcb83d1442b7862d60b3354f23ab`, function (data) {
+            if (data.results && data.results.length > 0) {
+              const locationName = data.results[0].formatted;
+              userLocation.textContent = `Location: ${locationName}`;
+            } else {
+              userLocation.textContent = "Location not available.";
+            }
+          });
+        });
+      } else {
+        const userLocation = document.getElementById("userLocation");
+        userLocation.textContent = "Geolocation not supported by your browser.";
+      }
+
+     
+      
+
+
+      function displayWeather(latitude, longitude) {
+      const apiKey = 'a0c15f16f19403befda7aa3e84f2b9a7';
+      const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
+
+      $.get(weatherUrl, function (weatherData) {
+        const temp = weatherData.main.temp;
+        const weatherCondition = weatherData.weather[0].main;
+        $('#weather').html(`Temperature: ${temp}°C, Condition: ${weatherCondition}`);
+      }).fail(function () {
+        $('#weather').html('Unable to retrieve weather data.');
+      });
+    }
+
+    // Call this function after fetching the user's location
+    navigator.geolocation.getCurrentPosition(function (position) {
+      displayWeather(position.coords.latitude, position.coords.longitude);
+    });
+
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            console.log(position);
+        },
+        (error) => {
+            console.error("Error Code = " + error.code + " - " + error.message);
+        }
+    );
+        $(document).ready(function () {
+          $('#sendOTP').click(function () {
+            const email = $('#signup-email').val(); 
+            $.get(`/sendotp?email=${email}`, function (data) {
+              console.log(data); 
+            });
+          });
+        });
+  </script>
+</body>
+</html>
